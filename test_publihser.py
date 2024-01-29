@@ -1,14 +1,15 @@
 import rospy
-from rospy_websocket_client import ros_ws_client as ros_ws
 from std_msgs.msg import String
 
 if __name__ == "__main__":
-  ws_pub_client = ros_ws.ws_client('pub_client')
-  ws_pub_client.advertise('/test_string', String)
+  rospy.init_node("test_publihser")
 
   # Test ROS msg publisher
+  test_pub = rospy.Publisher('/test_string', String, queue_size=1)
   rate = rospy.Rate(10)
+  msg = String()
+  msg.data = "test"
 
   while not rospy.is_shutdown():
-    rospy.spin()
+    test_pub.publish(msg)
     rate.sleep()
