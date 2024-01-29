@@ -10,5 +10,6 @@ if __name__ == "__main__":
 
   while not rospy.is_shutdown():
     msg = ws_sub_client.recv()
-    print(msg.data)
+    if msg != None:
+      print(msg.data)
     rate.sleep()
