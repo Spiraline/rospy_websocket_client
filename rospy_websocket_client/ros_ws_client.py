@@ -104,6 +104,11 @@ class ws_client():
     print("%s:%s\t|\tSubscribe to: %s \ttype: %s \trate: %s \tqueue_length: %s" % (self._ip, self._port, topic_name, msgs_data._type, rate, queue_size))
   
   def subscribe(self, topic_name, msgs_data, rate = 0, queue_size = 0):
+    # If not advertised, advertise topic
+    if topic_name not in self._advertise_dict:
+      topic_type = msgs_data._type
+      self._advertise(topic_name, topic_type)
+
     pub = rospy.Publisher(topic_name, msgs_data.__class__, queue_size=queue_size)
     self._sub_dict[topic_name] = {
       'msg': msgs_data,
