@@ -26,7 +26,11 @@ class ws_client():
     
   # Connect to rosbridge websocket
   def connect(self):
+    fail_cnt = 0
     while not self._is_connected:
+      if fail_cnt > 10:
+        print("%s:%s\t|\tError connecting to server for 30s. Exit" % (self._ip, self._port))
+        exit(1)
       try:
         self._ws = websocket.create_connection(
           'ws://' + self._ip + ':' + str(self._port)
@@ -35,9 +39,10 @@ class ws_client():
         self._is_connected = True
         self._ws.settimeout(1)
       except:
-        print("%s:%s\t|\tError connecting to server. Waiting for 5 seconds.." % (self._ip, self._port))
+        print("%s:%s\t|\tError connecting to server. Waiting for 3 seconds.. (%d / 10)" % (self._ip, self._port, fail_cnt))
+        fail_cnt += 1
         self._connect_flag = False
-        time.sleep(5)
+        time.sleep(3)
 
   def recv(self):
     try:

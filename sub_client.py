@@ -1,9 +1,17 @@
+import argparse
 import rospy
 from rospy_websocket_client import ros_ws_client as ros_ws
 from std_msgs.msg import String
 
 if __name__ == "__main__":
-  ws_sub_client = ros_ws.ws_client('sub_client')
+  parser = argparse.ArgumentParser(description='pub_client')
+  parser.add_argument('--ip', '-i', type=str, default='127.0.0.1')
+  parser.add_argument('--port', '-p', type=str, default='9090')
+
+  args = parser.parse_args()
+
+  ws_sub_client = ros_ws.ws_client('sub_client', args.ip, args.port)
+
   ws_sub_client.subscribe('/test_string', String(), 10, 1)
 
   rate = rospy.Rate(10)
