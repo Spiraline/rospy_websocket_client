@@ -33,7 +33,7 @@ class ACC2ESC():
     if self.accel_msg.data >= 0.0:
       self.brake_msg.data = 0.0
     else:
-      self.brake_msg.data = -self.brake_msg.data
+      self.brake_msg.data = -self.accel_msg.data
       self.accel_msg.data = 0.0
     
     self.discrete_time_integrater += 0.001 * ax_diff * 0.001

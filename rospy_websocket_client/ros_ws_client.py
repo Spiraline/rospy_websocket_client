@@ -28,8 +28,8 @@ class ws_client():
   def connect(self):
     fail_cnt = 0
     while not self._is_connected:
-      if fail_cnt > 10:
-        print("%s:%s\t|\tError connecting to server for 30s. Exit" % (self._ip, self._port))
+      if fail_cnt > 5:
+        print("%s:%s\t|\tError connecting to server for 15s. Exit" % (self._ip, self._port))
         exit(1)
       try:
         self._ws = websocket.create_connection(
@@ -39,7 +39,7 @@ class ws_client():
         self._is_connected = True
         self._ws.settimeout(1)
       except:
-        print("%s:%s\t|\tError connecting to server. Waiting for 3 seconds.. (%d / 10)" % (self._ip, self._port, fail_cnt))
+        print("%s:%s\t|\tError connecting to server. Waiting for 3 seconds.. (%d / 5)" % (self._ip, self._port, fail_cnt))
         fail_cnt += 1
         self._connect_flag = False
         time.sleep(3)
@@ -49,7 +49,7 @@ class ws_client():
       json_raw = self._ws.recv()
     except:
       print("%s:%s\t|\tFail to recv msg" % (self._ip, self._port))
-      return None
+      return None, None
     
     json_msg = json.loads(json_raw)
 
@@ -59,9 +59,9 @@ class ws_client():
       topic_type = self._sub_dict[topic_name]['msg']._type
       ros_msg = message_converter.convert_dictionary_to_ros_message(topic_type, msg_dict)
 
-      return ros_msg
+      return topic_name, ros_msg
 
-    return None
+    return None, None
   
   def _advertise(self, topic_name, topic_type):
     """
@@ -136,7 +136,7 @@ class ws_client():
 
     try:
       self._ws.send(json_msg)
-      print("%s:%s\t|\tPublish msg %s" % (self._ip, self._port, topic_name))
+      # print("%s:%s\t|\tPublish msg %s" % (self._ip, self._port, topic_name))
     except:
       print("%s:%s\t|\tFail to publish msg %s" % (self._ip, self._port, topic_name))
       self._is_connected = False
