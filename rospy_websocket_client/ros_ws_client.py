@@ -1,4 +1,5 @@
-import websocket
+import websockets
+import asyncio
 import json
 import yaml
 import rospy
@@ -13,40 +14,36 @@ class ws_client():
     self._ip = ip
     self._port = port
     self._address = "ws://" + self._ip + ":" + str(self._port)
-    self._is_connected = False
+    self._ws = None
 
     self._advertise_dict = {}
     self._sub_dict = {}
-
-    self.connect()
-  
-  def __del__(self):
-    if self._ws is not None:
-      self._ws.close()
     
   # Connect to rosbridge websocket
-  def connect(self):
+  async def connect(self):
     fail_cnt = 0
-    while not self._is_connected:
-      if fail_cnt > 10:
-        print("%s:%s\t|\tError connecting to server for 30s. Exit" % (self._ip, self._port))
+    while not self._ws:
+      if fail_cnt > 5:
+        print("%s:%s\t|\tError connecting to server for 10s. Exit" % (self._ip, self._port))
         exit(1)
       try:
-        self._ws = websocket.create_connection(
-          'ws://' + self._ip + ':' + str(self._port)
+        self._ws = await websockets.connect(
+          uri = self._address,
+          timeout = 1
         )
         print("%s:%s\t|\tConnected to server" % (self._ip, self._port))
-        self._is_connected = True
-        self._ws.settimeout(1)
       except:
-        print("%s:%s\t|\tError connecting to server. Waiting for 3 seconds.. (%d / 10)" % (self._ip, self._port, fail_cnt))
+        print("%s:%s\t|\tError connecting to server. Waiting for 2 seconds.. (%d / 5)" % (self._ip, self._port, fail_cnt))
         fail_cnt += 1
-        self._connect_flag = False
-        time.sleep(3)
+        time.sleep(2)
+  
+  async def close(self):
+    if self._ws is not None:
+      await self._ws.close()
 
-  def recv(self):
+  async def recv(self):
     try:
-      json_raw = self._ws.recv()
+      json_raw = await self._ws.recv()
     except:
       print("%s:%s\t|\tFail to recv msg" % (self._ip, self._port))
       return None
@@ -63,7 +60,7 @@ class ws_client():
 
     return None
   
-  def _advertise(self, topic_name, topic_type):
+  async def _advertise(self, topic_name, topic_type):
     """
     Advertise a topic with it's type in 'package/Message' format.
     :param str topic_name: ROS topic name.
@@ -76,15 +73,15 @@ class ws_client():
                       }
 
     try:
-      self._ws.send(json.dumps(advertise_msg))
+      await self._ws.send(json.dumps(advertise_msg))
     except:
       print("%s:%s\t|\Fail to advertise msg %s" % (self._ip, self._port, topic_name))
-      self._is_connected = False
-      self.connect()
+      if self._ws.closed:
+        self.connect()
 
     print("%s:%s\t|\tAdvertise %s with type %s" % (self._ip, self._port, topic_name, topic_type))
     
-  def _subscribe(self, topic_name, msgs_data, rate = 0.0, queue_size = 0):
+  async def _subscribe(self, topic_name, msgs_data, rate = 0.0, queue_size = 0):
     _rate = 0.0
 
     if rate > 0.0:
@@ -100,14 +97,14 @@ class ws_client():
 
     # send to server
     json_msg = json.dumps(pub_msg)
-    self._ws.send(json_msg)
+    await self._ws.send(json_msg)
     print("%s:%s\t|\tSubscribe to: %s \ttype: %s \trate: %s \tqueue_length: %s" % (self._ip, self._port, topic_name, msgs_data._type, rate, queue_size))
   
-  def subscribe(self, topic_name, msgs_data, rate = 0, queue_size = 0):
+  async def subscribe(self, topic_name, msgs_data, rate = 0, queue_size = 0):
     # If not advertised, advertise topic
     if topic_name not in self._advertise_dict:
       topic_type = msgs_data._type
-      self._advertise(topic_name, topic_type)
+      await self._advertise(topic_name, topic_type)
 
     pub = rospy.Publisher(topic_name, msgs_data.__class__, queue_size=queue_size)
     self._sub_dict[topic_name] = {
@@ -117,13 +114,13 @@ class ws_client():
       'queue_size': queue_size
     }
 
-    self._subscribe(topic_name, msgs_data, rate, queue_size)
+    await self._subscribe(topic_name, msgs_data, rate, queue_size)
 
-  def publish(self, topic_name, ros_message):
+  async def publish(self, topic_name, ros_message):
     # If not advertised, advertise topic
     if topic_name not in self._advertise_dict:
       topic_type = ros_message._type
-      self._advertise(topic_name, topic_type)
+      await self._advertise(topic_name, topic_type)
 
     ros_message_as_dict = yaml.safe_load(ros_message.__str__())
     
@@ -135,9 +132,9 @@ class ws_client():
     json_msg = json.dumps(msg)
 
     try:
-      self._ws.send(json_msg)
+      await self._ws.send(json_msg)
       print("%s:%s\t|\tPublish msg %s" % (self._ip, self._port, topic_name))
     except:
       print("%s:%s\t|\tFail to publish msg %s" % (self._ip, self._port, topic_name))
-      self._is_connected = False
-      self.connect()
+      if self._ws.closed:
+        self.connect()
