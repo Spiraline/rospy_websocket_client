@@ -5,13 +5,13 @@ from util.acc_to_esc import ACC2ESC
 from std_msgs.msg import Float32
 from geometry_msgs.msg import AccelStamped, TwistStamped, PoseStamped
 
-GPS_POSE_TOPIC = '/hellocm/gps_pose'
-GPS_TWIST_TOPIC = '/hellocm/gps_twist'
-GPS_ACCEL_TOPIC = '/hellocm/gps_accel'
+GPS_POSE_TOPIC = '/carmaker/gps_pose'
+GPS_TWIST_TOPIC = '/carmaker/gps_twist'
+GPS_ACCEL_TOPIC = '/carmaker/gps_accel'
 
-ESC_ACCEL_TOPIC = '/hellocm/accel'
-ESC_BRAKE_TOPIC = '/hellocm/brake'
-EPS_STEER_TOPIC = '/hellocm/steer'
+ESC_ACCEL_TOPIC = '/carmaker/accel'
+ESC_BRAKE_TOPIC = '/carmaker/brake'
+EPS_STEER_TOPIC = '/carmaker/steer'
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='rf_client')

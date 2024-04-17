@@ -11,8 +11,8 @@ class ACC2ESC():
     self.brake_msg = Float32()
 
     self.ax_sub = rospy.Subscriber('/desired_ax', Float32, self.axCallback)
-    self.accel_pub = rospy.Publisher('/hellocm/accel', Float32, queue_size=1)
-    self.brake_pub = rospy.Publisher('/hellocm/brake', Float32, queue_size=1)
+    self.accel_pub = rospy.Publisher('/carmaker/accel', Float32, queue_size=1)
+    self.brake_pub = rospy.Publisher('/carmaker/brake', Float32, queue_size=1)
 
     rospy.spin()
 

@@ -3,10 +3,10 @@ import threading
 import rospy
 from std_msgs.msg import Float32
 
-ACC_MIN = -10
-ACC_MAX = 10
-STEER_MIN = -750
-STEER_MAX = 750
+ACC_MIN = -2
+ACC_MAX = 2
+STEER_MIN = -500
+STEER_MAX = 500
 
 current_pressed = set()
 global current_acc
@@ -30,11 +30,11 @@ def on_press(key):
 
     if keyboard.Key.left in current_pressed:
         if current_steer < STEER_MAX:
-            current_steer += 10
+            current_steer += 100
 
     if keyboard.Key.right in current_pressed:
         if current_steer > STEER_MIN:
-            current_steer -= 10
+            current_steer += -100
 
     print('acc : %f steer : %f' %(current_acc, current_steer))
 
