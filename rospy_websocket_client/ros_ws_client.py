@@ -43,7 +43,7 @@ class ws_client():
 
   async def recv(self):
     try:
-      json_raw = await self._ws.recv()
+      json_raw = await asyncio.wait_for(self._ws.recv(), timeout=0.01)
     except:
       print("%s:%s\t|\tFail to recv msg" % (self._ip, self._port))
       return None
